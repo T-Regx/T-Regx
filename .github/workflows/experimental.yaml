@@ -1,0 +1,59 @@
+on:
+  pull_request:
+  push:
+
+name: experimental
+
+jobs:
+  php-lint:
+    name: PHP Lint
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        php-version:
+          - 8.1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+
+      - name: PHP Lint
+        run: find src test -name '*.php' -print0 | xargs -0 -n 1 -P 4 php -l
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-20.04
+    needs: [ php-lint ]
+    strategy:
+      matrix:
+        include:
+          - php-version: 8.1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          tools: composer:v2
+          coverage: "${{ matrix.coverage }}"
+      - name: Cache dependencies installed with Composer
+        uses: actions/cache@v1
+        with:
+          path: ~/.cache/composer
+          key: php${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: php${{ matrix.php-version }}-composer-
+      - name: Install Composer dependencies
+        run: |
+          composer update --with-dependencies --no-progress --ignore-platform-reqs;
+          composer install --no-progress;
+          composer show;
+      - name: Run tests
+        run: ./vendor/bin/phpunit test
