@@ -2,14 +2,14 @@
 namespace TRegx\CleanRegex\Internal;
 
 use TRegx\CleanRegex\Exception\InternalCleanRegexException;
-use TRegx\CleanRegex\Internal\Model\IRawWithGroups;
+use TRegx\CleanRegex\Internal\Model\GroupAware;
 
 class GroupNames
 {
-    /** @var IRawWithGroups */
+    /** @var GroupAware */
     private $match;
 
-    public function __construct(IRawWithGroups $match)
+    public function __construct(GroupAware $match)
     {
         $this->match = $match;
     }
